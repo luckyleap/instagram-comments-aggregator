@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var app = express();
 app.use(bodyParser.json());
 
+// CHANGE CLIENT ID TO AN APPROVED CLIENT ID FOR PUBLIC ACCESS
 var client_id = '32d128ab031b4d2cbe05514ff83926a7'
 var redirect_uri = 'http://localhost:3000/callback'
 
