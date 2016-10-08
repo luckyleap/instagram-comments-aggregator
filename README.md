@@ -10,6 +10,7 @@ This repository achieves the following tasks using the [instagram api](https://w
 ## Setup
 In order to run the code, [Node.js](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) must first be installed.
 
+**Important** :
 The current client id used in the project is in sandbox mode and therefore does not have access to public data. In order to get public data, replace `client_id` with an approved client_id under `index.js`
 
 
