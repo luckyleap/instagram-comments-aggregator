@@ -15,7 +15,14 @@ app.get('/', function(req, res){
 
 app.get('/callback', function(req, res) {
   res.sendfile('index.html');
+
 })
+
+app.post('/data', function(req, res){
+	console.log('body: ' + JSON.stringify(req.body));
+  res.setHeader('Content-Type', 'application/json');
+  res.send(req.body);
+});
 
 var server = app.listen(3000, function() {
   console.log('Listening on port %d', server.address().port);

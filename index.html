@@ -1,31 +1,143 @@
 <!DOCTYPE html>
 <head>
+<body>
+<p id='data'>
+
+</p>
+</body>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js'></script>
 <script>
     var token_str = window.location.hash.split("=")[1];
     var return_data = {};
+    return_data['medias'] = [];
 
-    $(document).ready(function(){
-               $.ajax({
-                   url: 'https://api.instagram.com/v1/users/self/?access_token='+token_str,
-                   dataType: 'jsonp',
-                   success: function(result){
-                       var id = result.data.id
-                       return_data.user_id = id;
-                       var user_media_url = 'https://api.instagram.com/v1/users/'+id+'/media/recent/?count=100&access_token='+token_str
+    function postJSON(dataStr) {
+		$.ajax({
+			type: 'POST',
+			data: dataStr,
+	        contentType: 'application/json',
+            url: '/data',
+            success: function(data) {
+                alert('Success!');
 
-                        $.ajax({
-                            url: user_media_url,
-                            dataType: 'jsonp',
-                            success: function(result) {
-                                for (media of result.data) {
-                                    
-                                }
-                            }
-                        })
-                   }
-               });
-           })
+            }
+        })
+        document.getElementById('data').innerText = dataStr;
+    }
+
+    // Used curr_index and max_index to do synchronous iterative request loop
+    function getMediaComments(curr_index, max_index, comments_url) {
+        var pagination_url;
+        var media = return_data['medias'][curr_index];
+        media_id = media.id;
+        $.ajax({
+            url: comments_url,
+            dataType: 'jsonp',
+            async: 'false',
+            success: function(result) {
+                for (comment of result.data) {
+                    media['comments'].push(comment.text);
+                }
+            },
+            complete: function() {
+                if (curr_index != max_index) {
+                    var media_id = return_data['medias'][curr_index + 1].id
+                    comments_media_url = 'https://api.instagram.com/v1/media/'+media_id+'/comments?access_token='+token_str
+                    getMediaComments(curr_index + 1, max_index, comments_media_url);
+
+                } else {
+                    // Complete
+                    var data_str = JSON.stringify(return_data);
+                    postJSON(data_str);
+                    console.log(data_str);
+                }
+            }
+        })
+    }
+
+    function getMediaID(user_id, media_url) {
+        var pagination_url;
+        $.ajax({
+            url: media_url,
+            dataType: 'jsonp',
+            async: false,
+            success: function(result) {
+                pagination_url = result.pagination.next_url;
+                for (media_data of result.data) {
+                    if(media_data.id != undefined) {
+                        var media = {};
+                        media['id'] = media_data.id;
+                        media['comments'] = [];
+                        return_data['medias'].push(media);
+                    }
+                }
+            },
+            complete: function() {
+                if(typeof pagination_url != 'undefined') {
+                    console.log(pagination_url);
+
+                } else {
+                    var init = 0;
+                    var final = return_data['medias'].length - 1;
+                    var media_id = return_data['medias'][init].id
+                    comments_media_url = 'https://api.instagram.com/v1/media/'+media_id+'/comments?access_token='+token_str
+                    getMediaComments(init, final, comments_media_url);
+
+                }
+            }
+        })
+
+    }
+
+    function getUserID() {
+        $.ajax({
+           url: 'https://api.instagram.com/v1/users/self/?access_token='+token_str,
+           dataType: 'jsonp',
+           async: false,
+           success: function(result){
+               var id = result.data.id;
+               return_data['user_id'] = id;
+
+            },
+            complete: function() {
+                var user_id = return_data['user_id'];
+                var user_media_url = 'https://api.instagram.com/v1/users/'+user_id+'/media/recent/?count=100&access_token='+token_str
+                getMediaID(user_id, user_media_url);
+
+            }
+        });
+    }
+
+    // Not available for current client id, must switch client id to approved client id
+    // Warning: has also not been tested so could break...
+    function getPopularUser() {
+        var pop_user_id = null;
+        $.ajax({
+            url: 'https://api.instagram.com/v1/tags/nofilter/media/popular?access_token='+token_str,
+            dataType: 'jsonp',
+            async: false,
+            success: function(result) {
+                // Not sure what the returned json is...assuming that it is an array of popular medias
+                // Assuming that media's json is similar to media json returned by api
+                for (media of result.data) {
+                    if (media.likes.count >= 200) {
+                        pop_user_id = media.user.id
+                        break;
+                    }
+                }
+            },
+            complete: function() {
+                var user_media_url = 'https://api.instagram.com/v1/users/'+pop_user_id+'/media/recent/?count=100&access_token='+token_str
+                getMediaID(pop_user_id, user_media_url);
+            }
+        })
+    }
+
+    $(document).ready(function() {
+        // Replace with getPopularUser() once an approved client id is used
+        getUserID();
+    })
+
 </script>
 </head>
 <body>
