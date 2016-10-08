@@ -13,6 +13,7 @@ In order to run the code, [Node.js](https://nodejs.org/en/) and [npm](https://ww
 **Important** :
 The current client id used in the project is in sandbox mode and therefore does not have access to public data. In order to get public data, replace `client_id` with an approved client_id under `index.js`
 
+Once the client id has been replaced, replace `getUserID` with `getPopularUser` on `line 138` of `index.html` to get step 1 running. Otherwise, the default set up is fetching the user of the client id.
 
 ## Running the project
 
